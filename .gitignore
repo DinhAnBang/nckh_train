@@ -1,0 +1,30 @@
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Local reports and logs
+*.log
+*.tmp
+*.bak
+
+# Large local ToN-IoT data files
+Raw_datasets/
+Processed_datasets/
+Train_Test_datasets/
+SecuityEvents_GroundTruth_datasets/
+Description_stats_datasets/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+
