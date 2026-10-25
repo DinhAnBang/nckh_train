@@ -12,11 +12,12 @@ from typing import Iterable
 
 import pandas as pd
 
+from ton_iot.config.paths import PROJECT_ROOT, SOURCE_DATASET_DIR
+
 
 EXPECTED_FILE_COUNT = 23
 CHUNK_SIZE = 100_000
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-PREFERRED_DATASET_DIRECTORY = PROJECT_ROOT / "Processed_datasets" / "Processed_Network_dataset"
+PREFERRED_DATASET_DIRECTORY = SOURCE_DATASET_DIR
 
 NORMAL_LABELS = {"0", "normal", "benign", "false", "no"}
 ATTACK_LABELS = {"1", "attack", "anomaly", "malicious", "true", "yes"}
@@ -318,7 +319,15 @@ def compare_schemas(
 
         columns = result["columns"]
         if columns != reference_columns:
-            schema_consistent = False
+            # The Network source has one documented optional UID column in file 6.
+            # All shared columns must still have exactly the same names and order.
+            optional_uid = (
+                path.name == "Network_dataset_6.csv"
+                and tuple(column for column in columns if column != "uid") == reference_columns
+                and columns.count("uid") == 1
+            )
+            if not optional_uid:
+                schema_consistent = False
             missing = [column for column in reference_columns if column not in columns]
             extra = [column for column in columns if column not in reference_columns]
             order_difference = not missing and not extra and columns != reference_columns
@@ -329,10 +338,9 @@ def compare_schemas(
                 details.append("extra=" + ", ".join(extra))
             if order_difference:
                 details.append("column order differs")
-            warnings.append(
-                f"Schema warning: {path.name} differs from the reference file "
-                f"({'; '.join(details)})."
-            )
+            prefix = "Known optional UID" if optional_uid else "Schema warning"
+            warnings.append(f"{prefix}: {path.name} differs from the reference file "
+                            f"({'; '.join(details)}).")
 
         for column, dtypes in result["dtypes"].items():
             observed = tuple(sorted(dtypes))
@@ -437,7 +445,9 @@ def print_report(
         f"{total_rows:,} == {total_normal:,} + {total_attack:,} + {total_invalid:,} -> "
         f"{'PASS' if reconciles else 'FAIL'}"
     )
-    print(f"Schema consistency: {'PASS' if schema_consistent else 'FAIL'}")
+    suffix = " (shared columns; optional uid in file 6)" if schema_consistent and any(
+        warning.startswith("Known optional UID") for warning in schema_warnings) else ""
+    print(f"Schema consistency: {'PASS' if schema_consistent else 'FAIL'}{suffix}")
     label_consistent = total_missing == 0 and total_invalid_values == 0 and total_conflicts == 0
     print(f"Label consistency: {'PASS' if label_consistent else 'FAIL'}")
 

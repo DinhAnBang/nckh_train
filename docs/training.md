@@ -12,7 +12,7 @@ Chạy từ thư mục gốc dự án. Trên Linux:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m modelTraining.train --model all --dry-run
+python -m ton_iot.training.train --model all --dry-run
 ```
 
 Trên Windows PowerShell:
@@ -21,7 +21,8 @@ Trên Windows PowerShell:
 py -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-python -m modelTraining.train --model all --dry-run
+python -m pip install -e .
+python -m ton_iot.training.train --model all --dry-run
 ```
 
 Các lệnh chạy dùng Python 3.12 đã kiểm thử tại máy phát triển. Ghi lại phiên bản thực tế từ `run_manifest.json` khi chạy trên máy khác. Với XGBoost GPU cần bản cài có CUDA phù hợp; LightGBM GPU cần bản build hỗ trợ GPU. `nvidia-smi` phải chạy được trước khi dùng `--device gpu` trong chương trình này. Thành công ở dry-run CPU không xác nhận GPU hoạt động.
@@ -29,12 +30,12 @@ Các lệnh chạy dùng Python 3.12 đã kiểm thử tại máy phát triển.
 ## Chế độ chạy
 
 ```bash
-python -m modelTraining.train --model all --dry-run
-python -m modelTraining.train --model all --smoke-test --train-limit 1000 --validation-limit 200
-python -m modelTraining.train --model rf --train-mode full
-python -m modelTraining.train --model xgboost --train-mode full
-python -m modelTraining.train --model lightgbm --train-mode full
-python -m modelTraining.train --model all --train-mode full
+python -m ton_iot.training.train --model all --dry-run
+python -m ton_iot.training.train --model all --smoke-test --train-limit 1000 --validation-limit 200
+python -m ton_iot.training.train --model rf --train-mode full
+python -m ton_iot.training.train --model xgboost --train-mode full
+python -m ton_iot.training.train --model lightgbm --train-mode full
+python -m ton_iot.training.train --model all --train-mode full
 ```
 
 Thay `--model all` bằng `rf`, `xgboost` hoặc `lightgbm` để chạy riêng. `--dry-run` đọc và kiểm tra các phần dữ liệu, nhãn, metadata, kiểu và giá trị đặc trưng, đồng thời in ước lượng tài nguyên; không fit mô hình. `--smoke-test` dùng mặc định 2.000 dòng train và 400 dòng validation, lấy số lượng bằng nhau từ hai lớp theo thứ tự phần dữ liệu. Có thể đổi kích thước bằng `--train-limit` và `--validation-limit`. Kết quả này chỉ kiểm tra kỹ thuật; mẫu có phân bố khác dữ liệu thật. `--train-limit` cùng với `--train-mode full` cũng tạo một lần chạy **technical**, không phải huấn luyện chính thức. Chỉ lệnh có `--train-mode full` mà không có `--train-limit` mới dùng toàn bộ train. Không có chế độ huấn luyện mặc định khi thiếu cờ chế độ.
@@ -42,7 +43,7 @@ Thay `--model all` bằng `rf`, `xgboost` hoặc `lightgbm` để chạy riêng.
 Để chỉ định nơi chứa dữ liệu hoặc nơi lưu kết quả:
 
 ```bash
-python -m modelTraining.train --model all --dry-run --data-dir /path/to/features --output-dir /path/to/results
+python -m ton_iot.training.train --model all --dry-run --data-dir /path/to/features --output-dir /path/to/results
 ```
 
 Trên Windows dùng đường dẫn tương ứng, ví dụ `--data-dir E:\data\features`. Các đường dẫn mặc định được tính từ vị trí file mã nguồn, không phụ thuộc thư mục terminal. Chạy bằng `python -m ...` từ thư mục gốc để Python tìm được package.
@@ -62,7 +63,7 @@ Giá trị mặc định ở `config.py`. Truyền một JSON chứa các tham s
 ```
 
 ```bash
-python -m modelTraining.train --model all --smoke-test --config training_config.json
+python -m ton_iot.training.train --model all --smoke-test --config training_config.json
 ```
 
 Ngưỡng phân loại cố định là 0,5. Không tự cân bằng trọng số lớp; chỉ dùng `class_weight` khi người chạy cấu hình. Random seed mặc định là 42. XGBoost và LightGBM dùng validation để dừng sớm khi `--early-stopping-rounds` lớn hơn 0; test không tham gia fit, dừng sớm hoặc chọn ngưỡng.
@@ -74,7 +75,7 @@ Chạy dry-run trên dữ liệu hiện tại cho thấy 17.599.039 dòng train,
 Random Forest và LightGBM nhận CSR float64. XGBoost nhận dense float64 vì ô 0 không được phép biến thành giá trị thiếu do cơ chế sparse của XGBoost. Việc chuyển đổi này cần nhiều RAM hơn. Chương trình nạp từng phần Parquet để tạo ma trận, nhưng cả ba bộ phân loại ở cấu hình hiện tại đều fit trên ma trận train trong bộ nhớ. Không có học tăng dần hoặc out-of-core. Full mode có bộ chặn dựa trên RAM khả dụng và ước lượng bảo thủ; vượt qua bộ chặn không bảo đảm fit thành công. Kiểm tra RAM, ổ đĩa, GPU và dùng smoke test trước khi chạy full:
 
 ```bash
-python -m modelTraining.train --model all --dry-run
+python -m ton_iot.training.train --model all --dry-run
 nvidia-smi
 ```
 

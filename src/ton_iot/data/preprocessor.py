@@ -3,7 +3,6 @@
 from collections import Counter
 import csv
 import json
-from pathlib import Path
 import shutil
 import sys
 
@@ -13,10 +12,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-try:
-    from cleaner import BASE, write_parquet
-except ModuleNotFoundError:
-    from .cleaner import BASE, write_parquet
+from .cleaner import BASE, write_parquet
 
 
 SPLIT = BASE / "outputs" / "split"

@@ -1,11 +1,12 @@
-"""Portable paths and explicit defaults for all three models."""
+"""Portable model defaults and validation for the three classifiers."""
 
 from pathlib import Path
 
+from .paths import FEATURES_DIR, MODEL_OUTPUT_DIR
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATA_DIR = PROJECT_ROOT / "dataPreprocessing" / "outputs" / "features"
-DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
+
+DEFAULT_DATA_DIR = FEATURES_DIR
+DEFAULT_OUTPUT_DIR = MODEL_OUTPUT_DIR
 
 DEFAULTS = {
     "rf": {
@@ -29,12 +30,15 @@ DEFAULTS = {
 
 
 def model_config(name, device="cpu", overrides=None, smoke=False):
-    """Return one copy; never change defaults or data by model."""
+    """Return one independent model configuration without mutating defaults."""
+
     config = DEFAULTS[name].copy()
     if device != "cpu":
         if name == "rf":
             raise ValueError("Random Forest only supports CPU in this program")
-        config["device" if name == "xgboost" else "device_type"] = "cuda" if name == "xgboost" else "gpu"
+        config["device" if name == "xgboost" else "device_type"] = (
+            "cuda" if name == "xgboost" else "gpu"
+        )
     if overrides:
         unknown = set(overrides) - set(config)
         if unknown:

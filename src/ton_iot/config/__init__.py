@@ -1,0 +1,23 @@
+"""Central project paths and model configuration."""
+
+from .paths import (
+    BACKUP_PARENT,
+    DATA_OUTPUT_DIR,
+    DATA_REPORT_DIR,
+    FEATURES_DIR,
+    MODEL_OUTPUT_DIR,
+    PROJECT_ROOT,
+    REPORT_OUTPUT_DIR,
+    SOURCE_DATASET_DIR,
+)
+
+__all__ = [
+    "BACKUP_PARENT",
+    "DATA_OUTPUT_DIR",
+    "DATA_REPORT_DIR",
+    "FEATURES_DIR",
+    "MODEL_OUTPUT_DIR",
+    "PROJECT_ROOT",
+    "REPORT_OUTPUT_DIR",
+    "SOURCE_DATASET_DIR",
+]

@@ -13,12 +13,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-try:
-    from cleaner import BASE, OUTPUT as CLEANED, write_parquet
-    from verify_issues import hashes
-except ModuleNotFoundError:
-    from .cleaner import BASE, OUTPUT as CLEANED, write_parquet
-    from .verify_issues import hashes
+from .cleaner import BASE, OUTPUT as CLEANED, write_parquet
+from .verifier import hashes
 
 
 NETWORK = CLEANED / "network"

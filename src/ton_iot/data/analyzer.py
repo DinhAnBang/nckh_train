@@ -18,27 +18,18 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-try:
-    from reader import (
-        ATTACK_LABELS,
-        CHUNK_SIZE,
-        EXPECTED_FILE_COUNT,
-        NORMAL_LABELS,
-        detect_label_columns,
-        discover_network_files,
-    )
-except ModuleNotFoundError:  # Support both script execution and package imports.
-    from .reader import (
-        ATTACK_LABELS,
-        CHUNK_SIZE,
-        EXPECTED_FILE_COUNT,
-        NORMAL_LABELS,
-        detect_label_columns,
-        discover_network_files,
-    )
+from ton_iot.config.paths import DATA_REPORT_DIR
+from .reader import (
+    ATTACK_LABELS,
+    CHUNK_SIZE,
+    EXPECTED_FILE_COUNT,
+    NORMAL_LABELS,
+    detect_label_columns,
+    discover_network_files,
+)
 
 
-REPORT_DIRECTORY = Path(__file__).resolve().parent / "reports" / "analysis"
+REPORT_DIRECTORY = DATA_REPORT_DIR / "analysis"
 MISSING_NULL_TOKENS = {
     "<na>",
     "n/a",

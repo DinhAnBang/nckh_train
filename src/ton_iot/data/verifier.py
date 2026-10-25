@@ -9,16 +9,13 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-try:
-    from analyzer import CONNECTION_COLUMNS, MISSING_NULL_TOKENS, MISSING_PLACEHOLDER_TOKENS
-    from reader import CHUNK_SIZE, EXPECTED_FILE_COUNT, discover_network_files
-except ModuleNotFoundError:
-    from .analyzer import CONNECTION_COLUMNS, MISSING_NULL_TOKENS, MISSING_PLACEHOLDER_TOKENS
-    from .reader import CHUNK_SIZE, EXPECTED_FILE_COUNT, discover_network_files
+from ton_iot.config.paths import DATA_REPORT_DIR, PROJECT_ROOT, RAW_DATA_DIR
+from .analyzer import CONNECTION_COLUMNS, MISSING_NULL_TOKENS, MISSING_PLACEHOLDER_TOKENS
+from .reader import CHUNK_SIZE, EXPECTED_FILE_COUNT, discover_network_files
 
 
-OUTPUT = Path(__file__).resolve().parent / "reports" / "verification"
-ANALYSIS = OUTPUT.parent / "analysis"
+OUTPUT = DATA_REPORT_DIR / "verification"
+ANALYSIS = DATA_REPORT_DIR / "analysis"
 HASH_KEY_2 = "0123456789abcdef"
 RECORD_DTYPE = np.dtype([("key", "u8"), ("check", "u8"), ("file", "u1"), ("kind", "u1")])
 CONNECTION_DTYPE = np.dtype([("key", "u8"), ("check", "u8")])
@@ -284,7 +281,7 @@ def compare_raw_sources():
         values = dict(part.split("=", 1) for part in row["parsed_values"].split("|") if "=" in part)
         by_key[tuple(values[name] for name in keys)].append(row)
         row.update({"raw_matches": 0, "raw_src_ips": set(), "raw_src_bytes_values": set(), "raw_examples": []})
-    root = Path(__file__).resolve().parent.parent / "Raw_datasets" / "network_data" / "Network_dataset_Bro"
+    root = RAW_DATA_DIR / "network_data" / "Network_dataset_Bro"
     for path in sorted(root.rglob("conn.csv")):
         print(f"Checking raw {path.parent.name}/conn.csv ...", flush=True)
         with path.open(newline="", encoding="utf-8") as handle:

@@ -12,18 +12,15 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-try:
-    from reader import CHUNK_SIZE, EXPECTED_FILE_COUNT, discover_network_files
-    from verify_issues import hashes, missing_mask
-except ModuleNotFoundError:
-    from .reader import CHUNK_SIZE, EXPECTED_FILE_COUNT, discover_network_files
-    from .verify_issues import hashes, missing_mask
+from ton_iot.config.paths import DATA_OUTPUT_DIR, DATA_PREPROCESSING_DIR, DATA_REPORT_DIR
+from .reader import CHUNK_SIZE, EXPECTED_FILE_COUNT, discover_network_files
+from .verifier import hashes, missing_mask
 
 
-BASE = Path(__file__).resolve().parent
-OUTPUT = BASE / "outputs" / "cleaned"
-REPORT = BASE / "reports" / "cleaning"
-VERIFICATION = BASE / "reports" / "verification"
+BASE = DATA_PREPROCESSING_DIR
+OUTPUT = DATA_OUTPUT_DIR / "cleaned"
+REPORT = DATA_REPORT_DIR / "cleaning"
+VERIFICATION = DATA_REPORT_DIR / "verification"
 
 INTEGER_COLUMNS = (
     "ts", "src_port", "dst_port", "src_bytes", "dst_bytes", "missed_bytes",

@@ -8,6 +8,9 @@ __pycache__/
 .venv/
 venv/
 env/
+build/
+dist/
+*.egg-info/
 
 # Local reports and logs
 *.log
@@ -30,3 +33,4 @@ Thumbs.db
 dataPreprocessing/reports/
 dataPreprocessing/outputs/
 modelTraining/outputs/
+reports/

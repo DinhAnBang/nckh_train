@@ -12,7 +12,7 @@ from time import perf_counter
 import numpy as np
 
 from . import data_loader, evaluate
-from .config import DEFAULT_DATA_DIR, DEFAULT_OUTPUT_DIR, model_config
+from ton_iot.config.training import DEFAULT_DATA_DIR, DEFAULT_OUTPUT_DIR, model_config
 from .models import lightgbm_model, random_forest, xgboost_model
 from .utils import (available_resources, gpu_status, library_versions, rss_gib,
                     run_id, sha256_file, write_json)
