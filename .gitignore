@@ -29,6 +29,7 @@ Description_stats_datasets/
 .vscode/
 .DS_Store
 Thumbs.db
+notebooks/.ipynb_checkpoints/
 
 dataPreprocessing/reports/
 dataPreprocessing/outputs/

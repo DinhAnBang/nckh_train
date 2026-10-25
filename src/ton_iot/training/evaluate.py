@@ -36,6 +36,8 @@ def summarize(y_true, probability, attack_types, threshold=0.5):
         "recall": recall_score(truth, predicted, zero_division=0),
         "f1": f1_score(truth, predicted, zero_division=0),
         "macro_f1": f1_score(truth, predicted, labels=[0, 1], average="macro", zero_division=0),
+        "f1_normal": f1_score(truth, predicted, labels=[0], average="macro", zero_division=0),
+        "f1_attack": f1_score(truth, predicted, labels=[1], average="macro", zero_division=0),
         "pr_auc": auc(recall_curve, precision_curve),
         "average_precision": average_precision_score(truth, chance),
         "tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp),
@@ -52,6 +54,13 @@ def summarize(y_true, probability, attack_types, threshold=0.5):
                 "recall": counts[(kind, "detected")] / counts[(kind, "rows")]}
                for kind in sorted({kind for kind, _ in counts})]
     return metrics, by_type
+
+
+def always_attack(y_true, attack_types):
+    """Evaluate the transparent baseline that predicts attack for every row."""
+
+    truth = np.asarray(y_true, dtype=np.uint8)
+    return summarize(truth, np.ones(len(truth), dtype=np.float64), attack_types)
 
 
 def evaluate_batches(model, batches, threshold=0.5):

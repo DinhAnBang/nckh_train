@@ -20,7 +20,7 @@ MAX_EXACT_FLOAT64_INT = 2**53
 EXPECTED_FEATURE_COUNT = 197
 
 
-def inspect_layout(data_dir):
+def inspect_layout(data_dir, expected_rows=None):
     """Match every X part with its y and metadata, without loading all rows."""
     root = Path(data_dir).expanduser().resolve()
     rules_path = root / "metadata" / "train_fitted_rules.json"
@@ -63,10 +63,17 @@ def inspect_layout(data_dir):
                 raise ValueError(f"Invalid y or metadata schema: {relative}")
             counts[name] += rows
             parquet_bytes += x_path.stat().st_size
-    if counts["train"] != rules["train_rows"]:
-        raise ValueError("Train row count differs from fitted rules")
+    if expected_rows is None:
+        if counts["train"] != rules["train_rows"]:
+            raise ValueError("Train row count differs from fitted rules")
+    else:
+        expected = {name: int(expected_rows[name]) for name in SPLITS}
+        observed = {name: int(counts[name]) for name in SPLITS}
+        if observed != expected:
+            raise ValueError(f"Experiment row counts differ: expected {expected}, observed {observed}")
     return {"root": root, "parts": parts, "rows": counts, "columns": columns,
-            "types": reference_types, "rules_path": rules_path, "x_parquet_bytes": parquet_bytes}
+            "types": reference_types, "rules_path": rules_path, "x_parquet_bytes": parquet_bytes,
+            "expected_rows": expected_rows}
 
 
 def paired_paths(layout, split, x_path):
@@ -76,8 +83,14 @@ def paired_paths(layout, split, x_path):
 
 
 def to_csr(table, columns):
-    """Build CSR directly from nonzero columns, avoiding a full dense matrix."""
-    row_indices, col_indices, values = [], [], []
+    """Build CSR directly from nonzero columns, without a dense copy.
+
+    The zero values are deliberately omitted only from the sparse storage;
+    they remain real numeric zeros.  XGBoost is converted back to dense before
+    fitting because its sparse input semantics can treat omitted entries as
+    missing values.
+    """
+    nonzero_counts = []
     rows = table.num_rows
     for index, name in enumerate(columns):
         column = table.column(name)
@@ -93,12 +106,25 @@ def to_csr(table, columns):
             if not np.isfinite(array).all():
                 raise ValueError(f"Non-finite feature: {name}")
             positions = np.flatnonzero(array)
-            data = array[positions].astype(np.float64, copy=False)
-        row_indices.append(positions.astype(np.int32, copy=False))
-        col_indices.append(np.full(len(positions), index, dtype=np.int32))
-        values.append(data)
-    matrix = sparse.coo_matrix((np.concatenate(values),
-                                (np.concatenate(row_indices), np.concatenate(col_indices))),
+        nonzero_counts.append(len(positions))
+    total_nonzero = int(sum(nonzero_counts))
+    row_indices = np.empty(total_nonzero, dtype=np.int32)
+    col_indices = np.empty(total_nonzero, dtype=np.int32)
+    values = np.empty(total_nonzero, dtype=np.float64)
+    cursor = 0
+    for index, name in enumerate(columns):
+        column = table.column(name)
+        array = column.to_numpy(zero_copy_only=False)
+        positions = np.flatnonzero(array)
+        stop = cursor + len(positions)
+        row_indices[cursor:stop] = positions
+        col_indices[cursor:stop] = index
+        if pa.types.is_boolean(column.type):
+            values[cursor:stop] = 1.0
+        else:
+            values[cursor:stop] = array[positions].astype(np.float64, copy=False)
+        cursor = stop
+    matrix = sparse.coo_matrix((values, (row_indices, col_indices)),
                                shape=(rows, len(columns)), dtype=np.float64).tocsr()
     return matrix
 
@@ -204,7 +230,9 @@ def load_full(layout, split):
     matrices, labels = [], []
     for number, x_path in enumerate(layout["parts"][split], start=1):
         _, y_path, _ = paired_paths(layout, split, x_path)
-        matrices.append(to_csr(pq.read_table(x_path), layout["columns"]))
+        table = pq.read_table(x_path)
+        matrices.append(to_csr(table, layout["columns"]))
+        del table
         labels.append(pq.read_table(y_path, columns=["label"]).column(0).to_numpy())
         if number % 25 == 0:
             print(f"Loaded {split}: {number}/{len(layout['parts'][split])} parts", flush=True)
@@ -223,3 +251,13 @@ def eval_batches(layout, split, dense=False):
         y = pq.read_table(y_path, columns=["label"]).column(0).to_numpy()
         kinds = pq.read_table(metadata_path, columns=["type"]).column(0).to_pylist()
         yield x, y, kinds
+
+
+def label_type_batches(layout, split):
+    """Read only labels and attack types for a non-model baseline."""
+
+    for x_path in layout["parts"][split]:
+        _, y_path, metadata_path = paired_paths(layout, split, x_path)
+        y = pq.read_table(y_path, columns=["label"]).column(0).to_numpy()
+        kinds = pq.read_table(metadata_path, columns=["type"]).column(0).to_pylist()
+        yield y, kinds
