@@ -16,6 +16,19 @@ dist/
 *.log
 *.tmp
 *.bak
+*.swp
+*.swo
+
+# Credentials and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+credentials.json
+service_account*.json
+token.json
 
 # Large local ToN-IoT data files
 Raw_datasets/
@@ -23,6 +36,22 @@ Processed_datasets/
 Train_Test_datasets/
 SecuityEvents_GroundTruth_datasets/
 Description_stats_datasets/
+*.csv
+*.parquet
+*.joblib
+*.pkl
+*.zip
+colab_data/
+results/
+backup/
+backups/
+backup_*/
+*_backup_*/
+notebooks/lightgbm/
+notebooks/*/models/
+notebooks/*/metrics/
+notebooks/*/logs/
+notebooks/*/charts/
 
 # Editor and operating-system files
 .idea/

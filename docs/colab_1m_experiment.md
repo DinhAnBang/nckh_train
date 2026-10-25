@@ -120,12 +120,13 @@ Mở `notebooks/colab_network_1m.ipynb` và thực hiện lần lượt:
 
 1. Kiểm tra CPU, RAM, GPU, ổ đĩa và phiên bản thư viện.
 2. Kết nối Google Drive.
-3. Điền URL repository và clone branch cần dùng.
-4. Cài `requirements.txt` và package editable.
-5. Chọn thư mục sample trên Drive, copy vào `/content`.
+3. Điền URL repository, kiểm tra đúng nhánh `refactor/unified-src` và cập nhật Git an toàn.
+4. Cài `requirements.txt`, thêm `src` vào `PYTHONPATH` và kiểm tra import.
+5. Sao chép thư mục `network_1m/` hoặc giải nén `network_1m.zip` từ Drive vào `/content`.
 6. Validate sample.
 7. Tùy chọn kiểm tra GPU XGBoost.
-8. Chọn đúng một model và chạy; output lưu thẳng về Drive.
+8. Bật `RUN_TRAIN=True`, chọn đúng một model và chạy; output lưu thẳng về Drive.
+9. Đọc kết quả theo mã lần chạy và tạo biểu đồ từ số liệu đã lưu khi cần.
 
 Notebook không chứa thuật toán huấn luyện, không ghi cứng URL GitHub và không
 tự động chạy cả ba model.
